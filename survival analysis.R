@@ -1,4 +1,4 @@
-
+#load packages
 library(TCGAbiolinks)
 library(survminer)
 library(survival)
@@ -44,7 +44,7 @@ colnames(clinical_lusc_extract)<-colnames
 clinical_luad_extract$primary_diagnosis<-"LUAD"
 clinical_lusc_extract$primary_diagnosis<-"LUSC"
 
-#combine the two metaforms
+#combine the two meta forms
 nsclc_extract<-rbind(clinical_luad_extract,clinical_lusc_extract)
 TCGA_rawcounts<-read.csv("TCGA_tRNA.csv",header = T)
 TCGA_sample<-read.csv("TCGA_sample.csv",header = T)
@@ -56,26 +56,12 @@ row.names(TCGA_rm)<-TCGA_rm$tRNA_ID
 TCGA_rm$tRNA_ID<-NULL
 TCGA_sample$V1<-NULL
 
-#construct a DESeq DataSet Object class
-dds_TCGA_match<-DESeqDataSetFromMatrix(countData=TCGA_rm,colData=TCGA_sample,design= ~ V2) 
-
-#check normalization and create boxplot
-vst_TCGA_match<-varianceStabilizingTransformation(dds_TCGA_match)
-TCGA_vst<-assay(vst_TCGA_match)
-
-boxplot(TCGA_vst,ylab="dat", main=" normalized data ",
-        outline = F, notch = F)
-
-TCGA_vst_filter <- TCGA_vst[rownames(TCGA_vst) %in% c("tRNA-Val-CAC-2-1", "tRNA-Leu-AAG-2-3", "tRNA-Lys-CTT-3-1", "tRNA-Val-CAC-1-5", "tRNA-Ala-TGC-3-2", "tRNA-Asp-GTC-1-1"), ]
-
-
-#TPM method for standardization
+# Read the TPM normalized TCGA data
 TCGA_tpm<-read.csv("TCGA_tRNA_tpms.csv",header = T, row.names = 1)
 
 to_delete<-rowSums(TCGA_tpm==0)/ncol(TCGA_tpm)>=0.5
 TCGA_tpm_rm<-TCGA_tpm[!to_delete,]
 TCGA_tpm_filter<-TCGA_tpm_rm[rownames(TCGA_tpm_rm) %in% c("tRNA-Val-CAC-2-1", "tRNA-Leu-AAG-2-3", "tRNA-Lys-CTT-3-1", "tRNA-Val-CAC-1-5", "tRNA-Ala-TGC-3-2", "tRNA-Asp-GTC-1-1"), ]
-
 
 colnames(TCGA_tpm_filter)<- str_extract(colnames(TCGA_tpm_filter), "^[^_]+_[^_]+_[^_]+")
 TCGA_extract_match<-nsclc_extract[nsclc_extract$sample_id %in% colnames(TCGA_tpm_filter),]
