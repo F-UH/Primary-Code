@@ -46,19 +46,11 @@ clinical_lusc_extract$primary_diagnosis<-"LUSC"
 
 #combine the two meta forms
 nsclc_extract<-rbind(clinical_luad_extract,clinical_lusc_extract)
-TCGA_rawcounts<-read.csv("TCGA_tRNA.csv",header = T)
-TCGA_sample<-read.csv("TCGA_sample.csv",header = T)
-
-to_delete<-rowSums(TCGA_rawcounts==0)/ncol(TCGA_rawcounts)>=0.5
-TCGA_rm<-TCGA_rawcounts[!to_delete,] 
-row.names(TCGA_sample)<-TCGA_sample$V1
-row.names(TCGA_rm)<-TCGA_rm$tRNA_ID
-TCGA_rm$tRNA_ID<-NULL
-TCGA_sample$V1<-NULL
 
 # Read the TPM normalized TCGA data
 TCGA_tpm<-read.csv("TCGA_tRNA_tpms.csv",header = T, row.names = 1)
 
+#remove low counts
 to_delete<-rowSums(TCGA_tpm==0)/ncol(TCGA_tpm)>=0.5
 TCGA_tpm_rm<-TCGA_tpm[!to_delete,]
 TCGA_tpm_filter<-TCGA_tpm_rm[rownames(TCGA_tpm_rm) %in% c("tRNA-Val-CAC-2-1", "tRNA-Leu-AAG-2-3", "tRNA-Lys-CTT-3-1", "tRNA-Val-CAC-1-5", "tRNA-Ala-TGC-3-2", "tRNA-Asp-GTC-1-1"), ]
