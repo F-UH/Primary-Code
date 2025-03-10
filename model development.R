@@ -47,7 +47,6 @@ for (i in seq_along(file_names)) {
   cat("File processed:", file_names[[i]], "\n")
 }
 
-
 file_names
 
 # create metaObjects
@@ -66,7 +65,6 @@ names(independent_datasets) = c(dataObj_7$formattedName)
 exampleMetaObj3<-list()
 exampleMetaObj3$originalData <- independent_datasets
 
-
 checkDataObject(exampleMetaObj, "Meta", "Pre-Analysis")
 
 #warnings()
@@ -74,15 +72,14 @@ checkDataObject(exampleMetaObj, "Meta", "Pre-Analysis")
 library(multtest)
 library(gtable)
 
-###run meta##
+#run metaIntegrator
 exampleMetaObj <- runMetaAnalysis(exampleMetaObj, maxCores=1)
 exampleMetaObj2 <- runMetaAnalysis(exampleMetaObj2, maxCores=1)
 exampleMetaObj3 <- runMetaAnalysis(exampleMetaObj3, maxCores=1)
 
-##Check if the result has been written into $metaAnalysis and $leaveOneOutAnalysis:
 str(exampleMetaObj, max.level = 2)
 
-##filter FDR
+##filter results
 test1_discovery <- filterGenes(exampleMetaObj, isLeaveOneOut = TRUE, FDRThresh = 0.3, effectSizeThresh = 0.2)
 test1_discovery$filterResults$FDR0.3_es0.2_nStudies1_looaTRUE_hetero0
 summaryROCPlot(metaObject = exampleMetaObj, filterObject = test1_discovery$filterResults$FDR0.3_es0.2_nStudies1_looaTRUE_hetero0, bootstrapReps = 100)
@@ -97,8 +94,6 @@ summaryROCPlot(metaObject = exampleMetaObj2, filterObject = test1_discovery$filt
 
 #Independent validation by RUSH
 rocPlot(test1_discovery$filterResults$FDR0.3_es0.2_nStudies1_looaTRUE_hetero0, dataObj_7, title = "ROC plot for independent validation")
-
-
 
 # forwardRes
 forwardRes <- forwardSearch(test1_discovery,
@@ -144,18 +139,18 @@ forestPlot(exampleMetaObj_all, geneName="tRNA-Asp-GTC-1-1" ,  boxColor = "#00A08
            zeroLineColor = "black", summaryColor = "#5d9ad3", textColor = "#3c5488ff")
 dev.off()
 
-#ROC of Hold-out validation
+# ROC of Hold-out validation
 svg("Holdout_ROC.svg", width=7, height=5) 
 summaryROCPlot(metaObject = exampleMetaObj2, filterObject = forwardRes, bootstrapReps = 100)
 dev.off()
 
-#ROC of Independent validation
+# ROC of Independent validation
 svg("Independet_ROC.svg", width=7, height=5) 
 rocPlotValidation <- rocPlot(forwardRes, dataObj_7, title = "Independent validation in RUSH cohort")
 dev.off()
 
 
-#draw a box plot based on the T-score of Training
+# draw a box plot based on the T-score of discovery phase (training)
 GSE110907_score<-as.data.frame(calculateScore(forwardRes, dataObj_8))
 colnames(GSE110907_score)<- "Tscore"
 GSE110907_pheno <- dataObj_8$pheno
@@ -226,7 +221,7 @@ box_plot
 
 ggsave("Discovery_boxplot_1.svg", plot = box_plot, width=6, height=3)
 
-#draw a box plot based on the score of hold-out validation 
+#draw a box plot based on the T-score of hold-out validation 
 vGSE110907_score<-as.data.frame(calculateScore(forwardRes, dataObj_15))
 colnames(vGSE110907_score)<- "Tscore"
 vGSE110907_pheno <- dataObj_15$pheno
@@ -294,7 +289,7 @@ box_plot
 
 ggsave("Hold-out Validation_boxplot_1.svg", plot = box_plot, width=6, height=3)
 
-#draw a box plot based on the score of independent validation 
+#draw a box plot based on the T-score of independent validation 
 RUSH_score<-as.data.frame(calculateScore(forwardRes, dataObj_7))
 colnames(RUSH_score)<- "Tscore"
 RUSH_pheno <- dataObj_7$pheno
