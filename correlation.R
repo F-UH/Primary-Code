@@ -1,7 +1,9 @@
-#Correlation
+# Load packages
 library(pheatmap)
 library(RColorBrewer)
 
+
+# Correlation for specific datasets
 RUSH_filter<-read.csv(file = "RUSH_filter.csv", header = T, row.names = 1)
 data<-t(RUSH_filter)
 spearman_RUSH<-cor(data,method = "spearman")
@@ -129,7 +131,7 @@ pheatmap(spearman_GSE175462,
 
 dev.off()
 
-
+# Correlation for combined datasets
 # Combine all the tissue sample together
 RUSH_sample$batch <- "RUSH"
 TCGA_sample$batch <- "TCGA"
@@ -143,11 +145,12 @@ vector_list <- list(
   rownames(GSE110907_tRNA_tpms),
   rownames(GSE175462_tRNA_tpms),
   rownames(GSE62182_tRNA_tpms),
-  rownames(GSE83527_tRNA_tpms)
+  rownames(GSE83527_tRNA_tpms),
+  rownames(RUSH_tRNA_tpms)
 )
 overlap_PCA <- Reduce(intersect, vector_list)
-all_tRNA<-cbind(TCGA_tRNA_tpms[overlap_PCA,],GSE110907_tRNA_tpms[overlap_PCA,],GSE175462_tRNA_tpms[overlap_PCA,],GSE62182_tRNA_tpms[overlap_PCA,],GSE83527_tRNA_tpms[overlap_PCA,])
-all_sample<-rbind(TCGA_sample,GSE110907_sample,GSE175462_sample,GSE62182_sample,GSE83527_sample)
+all_tRNA<-cbind(TCGA_tRNA_tpms[overlap_PCA,],GSE110907_tRNA_tpms[overlap_PCA,],GSE175462_tRNA_tpms[overlap_PCA,],GSE62182_tRNA_tpms[overlap_PCA,],GSE83527_tRNA_tpms[overlap_PCA,],RUSH_tRNA_tpms[overlap_PCA,])
+all_sample<-rbind(TCGA_sample,GSE110907_sample,GSE175462_sample,GSE62182_sample,GSE83527_sample,RUSH_sample)
 write.csv(all_sample,file = "all_sample.csv")
 log_all <- log(all_tRNA+1)
 
@@ -168,11 +171,12 @@ vector_list <- list(
   rownames(GSE110907_tRF_tpms),
   rownames(GSE175462_tRF_tpms),
   rownames(GSE62182_tRF_tpms),
-  rownames(GSE83527_tRF_tpms)
+  rownames(GSE83527_tRF_tpms),
+  rownames(RUSH_tRF_tpms) 
 )
 overlap_PCA <- Reduce(intersect, vector_list)
-all_tRF<-cbind(TCGA_tRF_tpms[overlap_PCA,],GSE110907_tRF_tpms[overlap_PCA,],GSE175462_tRF_tpms[overlap_PCA,],GSE62182_tRF_tpms[overlap_PCA,],GSE83527_tRF_tpms[overlap_PCA,])
-all_sample<-rbind(TCGA_sample,GSE110907_sample,GSE175462_sample,GSE62182_sample,GSE83527_sample)
+all_tRF<-cbind(TCGA_tRF_tpms[overlap_PCA,],GSE110907_tRF_tpms[overlap_PCA,],GSE175462_tRF_tpms[overlap_PCA,],GSE62182_tRF_tpms[overlap_PCA,],GSE83527_tRF_tpms[overlap_PCA,],RUSH_tRF_tpms[overlap_PCA,])
+all_sample<-rbind(TCGA_sample,GSE110907_sample,GSE175462_sample,GSE62182_sample,GSE83527_sample,RUSH_sample)
 log_all <- log(all_tRF+1)
 
 design<-model.matrix(~V2, data = all_sample)
@@ -189,16 +193,19 @@ data<-t(all_filter)
 cor_mat_all<-cor(data)
 pheatmap(cor_mat_all, frontsize_row = 18, main = "Gene Expression Correlation of tissue samples")
 colors <- colorRampPalette(brewer.pal(20, "RdBu"))(255)
+
 svg("all.svg",width = 10,height = 8)
-pheatmap(spearman_all, 
-         col = colors,
-         fontsize_row = 10, 
-         fontsize_col = 10,
-         main = "Gene Expression Correlation of all tissue samples",
-         cluster_rows = FALSE, cluster_cols = FALSE,
-         cellwidth = 20,
-         cellheight = 20,
-         legend = TRUE,
-         breaks = seq(-1, 1, length.out = length(colors)),
-         show_rownames = TRUE, show_colnames = TRUE)
+library(corrplot)
+spearman_all<-cor(data,method = "spearman")
+res_all<-cor.mtest(data, conf.level=.95)
+colors <- colorRampPalette(brewer.pal(10, "RdYlBu"))(255)
+all<- corrplot(spearman_all,
+               method = "shade",
+               type = "upper",
+               addCoef.col = "white",
+               number.cex = 0.7,
+               col = colors,
+               tl.cex = 0.8,
+               tl.col = "black",
+               tl.srt = 45)
 dev.off()
