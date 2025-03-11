@@ -150,7 +150,6 @@ all_tRNA<-cbind(TCGA_tRNA_tpms[overlap_PCA,],GSE110907_tRNA_tpms[overlap_PCA,],G
 all_sample<-rbind(TCGA_sample,GSE110907_sample,GSE175462_sample,GSE62182_sample,GSE83527_sample)
 write.csv(all_sample,file = "all_sample.csv")
 log_all <- log(all_tRNA+1)
-boxplot(log_all,ylab="Data", main="With out batch effect correction", outline=FALSE, notch=FALSE)
 
 #remove batch effect
 library(limma)
@@ -175,7 +174,6 @@ overlap_PCA <- Reduce(intersect, vector_list)
 all_tRF<-cbind(TCGA_tRF_tpms[overlap_PCA,],GSE110907_tRF_tpms[overlap_PCA,],GSE175462_tRF_tpms[overlap_PCA,],GSE62182_tRF_tpms[overlap_PCA,],GSE83527_tRF_tpms[overlap_PCA,])
 all_sample<-rbind(TCGA_sample,GSE110907_sample,GSE175462_sample,GSE62182_sample,GSE83527_sample)
 log_all <- log(all_tRF+1)
-boxplot(log_all,ylab="Data", main="With out batch effect correction", outline=FALSE, notch=FALSE)
 
 design<-model.matrix(~V2, data = all_sample)
 limma<-removeBatchEffect(log_all,batch = all_sample$batch, design = design)
