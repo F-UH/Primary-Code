@@ -2,8 +2,7 @@
 library(pheatmap)
 library(RColorBrewer)
 
-
-# Correlation for specific datasets
+#### Correlation for specific datasets ####
 RUSH_filter<-read.csv(file = "RUSH_filter.csv", header = T, row.names = 1)
 data<-t(RUSH_filter)
 spearman_RUSH<-cor(data,method = "spearman")
@@ -131,8 +130,7 @@ pheatmap(spearman_GSE175462,
 
 dev.off()
 
-# Correlation for combined datasets
-# Combine all the tissue sample together
+##### Correlation for combined datasets ####
 RUSH_sample$batch <- "RUSH"
 TCGA_sample$batch <- "TCGA"
 GSE110907_sample$batch <- "GSE110907"
