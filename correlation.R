@@ -1,142 +1,77 @@
-# Load packages
+# ===============================
+# Load Required Packages
+# ===============================
 library(pheatmap)
 library(RColorBrewer)
-
-#### Correlation for specific datasets ####
-RUSH_filter<-read.csv(file = "RUSH_filter.csv", header = T, row.names = 1)
-data<-t(RUSH_filter)
-spearman_RUSH<-cor(data,method = "spearman")
-pheatmap(spearman_RUSH, frontsize_row = 18, main = "Gene Expression Correlation of RUSH")
-colors <- colorRampPalette(brewer.pal(15, "RdBu"))(255)
-
-svg("RUSH.svg", width=10, height=8) 
-pheatmap(spearman_RUSH, 
-         col = colors,
-         fontsize_row = 10,  
-         fontsize_col = 10,
-         main = "Gene Expression Correlation of RUSH",
-         cluster_rows = FALSE, cluster_cols = FALSE,
-         cellwidth = 20,
-         cellheight = 20,
-         legend = TRUE,
-         breaks = seq(-1, 1, length.out = length(colors)),
-         show_rownames = TRUE, show_colnames = TRUE)
-dev.off() 
-
 library(corrplot)
-svg("RUSH_2.svg",width = 10,height = 8)
-colors <- colorRampPalette(brewer.pal(10, "RdYlBu"))(255)
-all<- corrplot(spearman_RUSH,
-               method = "shade",
-               type = "upper",
-               addCoef.col = "white",
-               number.cex = 0.7,
-               col = colors,
-               tl.cex = 0.8,
-               tl.col = "black",
-               tl.srt = 45)
-dev.off()
+library(limma)
 
-TCGA_filter<-read.csv(file = "TCGA_filter.csv", header = T, row.names = 1)
-data<-t(TCGA_filter)
-spearman_TCGA<-cor(data,method = "spearman")
-pheatmap(spearman_TCGA, frontsize_row = 18, main = "Gene Expression Correlation of TCGA")
-colors <- colorRampPalette(brewer.pal(15, "RdBu"))(255)
-svg("TCGA.svg", width=10, height=8)
-pheatmap(spearman_TCGA, 
-         col = colors,
-         fontsize_row = 10,
-         fontsize_col = 10,
-         main = "Gene Expression Correlation of TCGA",
-         cluster_rows = FALSE, cluster_cols = FALSE,
-         cellwidth = 20,
-         cellheight = 20,
-         legend = TRUE,
-         breaks = seq(-1, 1, length.out = length(colors)),
-         show_rownames = TRUE, show_colnames = TRUE) 
-dev.off()
+# ===============================
+# Define Plotting Function
+# ===============================
+plot_correlation_heatmap <- function(cor_matrix, filename, title) {
+  colors <- colorRampPalette(brewer.pal(15, "RdBu"))(255)
+  svg(filename, width = 10, height = 8)
+  pheatmap(cor_matrix,
+           col = colors,
+           fontsize_row = 10,
+           fontsize_col = 10,
+           main = title,
+           cluster_rows = FALSE, cluster_cols = FALSE,
+           cellwidth = 20, cellheight = 20,
+           legend = TRUE,
+           breaks = seq(-1, 1, length.out = length(colors)),
+           show_rownames = TRUE, show_colnames = TRUE)
+  dev.off()
+}
 
-GSE110907_filter<-read.csv(file = "GSE110907_filter.csv", header = T, row.names = 1)
-data<-t(GSE110907_filter)
-spearman_GSE110907<-cor(data,method = "spearman")
-colors <- colorRampPalette(brewer.pal(15, "RdBu"))(255)
-svg("GSE110907.svg",width = 10, height = 8)
-pheatmap(spearman_GSE110907, 
-         col = colors,
-         fontsize_row = 10, 
-         fontsize_col = 10,
-         main = "Gene Expression Correlation of GSE110907",
-         cluster_rows = FALSE, cluster_cols = FALSE,
-         cellwidth = 20,
-         cellheight = 20,
-         legend = TRUE,
-         breaks = seq(-1, 1, length.out = length(colors)),
-         show_rownames = TRUE, show_colnames = TRUE)
-dev.off()
+plot_corrplot <- function(cor_matrix, filename, title = "") {
+  colors <- colorRampPalette(brewer.pal(10, "RdYlBu"))(255)
+  svg(filename, width = 10, height = 8)
+  corrplot(cor_matrix,
+           method = "shade",
+           type = "upper",
+           addCoef.col = "white",
+           number.cex = 0.7,
+           col = colors,
+           tl.cex = 0.8,
+           tl.col = "black",
+           tl.srt = 45)
+  dev.off()
+}
 
+# ===============================
+# Dataset-wise Spearman Correlations
+# ===============================
+datasets <- list(
+  RUSH = "RUSH_filter.csv",
+  TCGA = "TCGA_filter.csv",
+  GSE110907 = "GSE110907_filter.csv",
+  GSE62182 = "GSE62182_filter.csv",
+  GSE83527 = "GSE83527_filter.csv",
+  GSE175462 = "GSE175462_filter.csv"
+)
 
-GSE62182_filter<-read.csv(file = "GSE62182_filter.csv", header = T, row.names = 1)
-data<-t(GSE62182_filter)
-spearman_GSE62182<-cor(data,method = "spearman")
-pheatmap(spearman_GSE62182, frontsize_row = 18, main = "Gene Expression Correlation of GSE62182")
-svg("GSE62182.svg",width = 10, height = 8)
-pheatmap(spearman_GSE62182, 
-         col = colors,
-         fontsize_row = 10,  
-         fontsize_col = 10,
-         main = "Gene Expression Correlation of GSE62182",
-         cluster_rows = FALSE, cluster_cols = FALSE,
-         cellwidth = 20,
-         cellheight = 20,
-         legend = TRUE,
-         breaks = seq(-1, 1, length.out = length(colors)),
-         show_rownames = TRUE, show_colnames = TRUE)
-dev.off()
+for (name in names(datasets)) {
+  data <- read.csv(datasets[[name]], header = TRUE, row.names = 1)
+  data_t <- t(data)
+  spearman_matrix <- cor(data_t, method = "spearman")
+  
+  # Heatmap
+  plot_correlation_heatmap(spearman_matrix, paste0(name, ".svg"), 
+                           paste("Gene Expression Correlation of", name))
+  
+  # corrplot (only for RUSH as originally specified)
+  if (name == "RUSH") {
+    plot_corrplot(spearman_matrix, "RUSH_2.svg")
+  }
+}
 
-GSE83527_filter<-read.csv(file = "GSE83527_filter.csv", header = T, row.names = 1)
-data<-t(GSE83527_filter)
-spearman_GSE83527<-cor(data,method = "spearman")
-pheatmap(spearman_GSE83527, frontsize_row = 18, main = "Gene Expression Correlation of GSE83527")
-svg("GSE83527.svg", width = 10, height = 8)
-pheatmap(spearman_GSE83527, 
-         col = colors,
-         fontsize_row = 10, 
-         fontsize_col = 10,
-         main = "Gene Expression Correlation of GSE83527",
-         cluster_rows = FALSE, cluster_cols = FALSE,
-         cellwidth = 20,
-         cellheight = 20,
-         legend = TRUE,
-         breaks = seq(-1, 1, length.out = length(colors)),
-         show_rownames = TRUE, show_colnames = TRUE)
-dev.off()
-
-GSE175462_filter<-read.csv(file = "GSE175462_filter.csv", header = T, row.names = 1)
-data<-t(GSE175462_filter)
-spearman_GSE175462<-cor(data,method = "spearman")
-pheatmap(spearman_GSE175462, frontsize_row = 18, main = "Gene Expression Correlation of GSE175462")
-svg("GSE175462.svg",width = 10,height = 8)
-pheatmap(spearman_GSE175462, 
-         col = colors,
-         fontsize_row = 10,  
-         fontsize_col = 10,
-         main = "Gene Expression Correlation of GSE175462",
-         cluster_rows = FALSE, cluster_cols = FALSE,
-         cellwidth = 20,
-         cellheight = 20,
-         legend = TRUE,
-         breaks = seq(-1, 1, length.out = length(colors)),
-         show_rownames = TRUE, show_colnames = TRUE)
-
-dev.off()
-
-##### Correlation for combined datasets ####
-RUSH_sample$batch <- "RUSH"
-TCGA_sample$batch <- "TCGA"
-GSE110907_sample$batch <- "GSE110907"
-GSE175462_sample$batch <- "GSE175462"
-GSE62182_sample$batch <- "GSE62182"
-GSE83527_sample$batch <- "GSE83527"
+# ===============================
+# Combine All tRNA Datasets
+# ===============================
+# Ensure these TPM matrices are loaded earlier in your script
+# TCGA_tRNA_tpms, GSE110907_tRNA_tpms, etc.
 
 vector_list <- list(
   rownames(TCGA_tRNA_tpms),
@@ -146,64 +81,74 @@ vector_list <- list(
   rownames(GSE83527_tRNA_tpms),
   rownames(RUSH_tRNA_tpms)
 )
-overlap_PCA <- Reduce(intersect, vector_list)
-all_tRNA<-cbind(TCGA_tRNA_tpms[overlap_PCA,],GSE110907_tRNA_tpms[overlap_PCA,],GSE175462_tRNA_tpms[overlap_PCA,],GSE62182_tRNA_tpms[overlap_PCA,],GSE83527_tRNA_tpms[overlap_PCA,],RUSH_tRNA_tpms[overlap_PCA,])
-all_sample<-rbind(TCGA_sample,GSE110907_sample,GSE175462_sample,GSE62182_sample,GSE83527_sample,RUSH_sample)
-write.csv(all_sample,file = "all_sample.csv")
-log_all <- log(all_tRNA+1)
+overlap_genes <- Reduce(intersect, vector_list)
 
-#remove batch effect
-library(limma)
-design<-model.matrix(~V2, data = all_sample)
-limma<-removeBatchEffect(log_all,batch = all_sample$batch, design = design)
-boxplot(limma,ylab="Data", main="Data after batch effect correction", outline=FALSE, notch=FALSE)
+all_tRNA <- cbind(
+  TCGA_tRNA_tpms[overlap_genes,],
+  GSE110907_tRNA_tpms[overlap_genes,],
+  GSE175462_tRNA_tpms[overlap_genes,],
+  GSE62182_tRNA_tpms[overlap_genes,],
+  GSE83527_tRNA_tpms[overlap_genes,],
+  RUSH_tRNA_tpms[overlap_genes,]
+)
 
-# Applying the inverse log transformation to revert back to counts
-limma_tRNA_all <- exp(limma)
-any(limma_tRNA_all < 0)
-write.csv(limma_tRNA_all, file = "limma_tRNA_all.csv")
+# Combine corresponding sample metadata
+all_sample <- rbind(TCGA_sample, GSE110907_sample, GSE175462_sample,
+                    GSE62182_sample, GSE83527_sample, RUSH_sample)
+write.csv(all_sample, "all_sample.csv")
 
-#for tRF
+# ===============================
+# Batch Effect Removal (tRNA)
+# ===============================
+log_tRNA <- log(all_tRNA + 1)
+design <- model.matrix(~V2, data = all_sample)
+limma_corrected <- removeBatchEffect(log_tRNA, batch = all_sample$batch, design = design)
+boxplot(limma_corrected, ylab = "Expression", main = "Batch-Corrected tRNA Data", outline = FALSE)
+limma_tRNA_all <- exp(limma_corrected)
+stopifnot(all(limma_tRNA_all >= 0))
+write.csv(limma_tRNA_all, "limma_tRNA_all.csv")
+
+# ===============================
+# Batch Effect Removal (tRF)
+# ===============================
 vector_list <- list(
   rownames(TCGA_tRF_tpms),
   rownames(GSE110907_tRF_tpms),
   rownames(GSE175462_tRF_tpms),
   rownames(GSE62182_tRF_tpms),
   rownames(GSE83527_tRF_tpms),
-  rownames(RUSH_tRF_tpms) 
+  rownames(RUSH_tRF_tpms)
 )
-overlap_PCA <- Reduce(intersect, vector_list)
-all_tRF<-cbind(TCGA_tRF_tpms[overlap_PCA,],GSE110907_tRF_tpms[overlap_PCA,],GSE175462_tRF_tpms[overlap_PCA,],GSE62182_tRF_tpms[overlap_PCA,],GSE83527_tRF_tpms[overlap_PCA,],RUSH_tRF_tpms[overlap_PCA,])
-all_sample<-rbind(TCGA_sample,GSE110907_sample,GSE175462_sample,GSE62182_sample,GSE83527_sample,RUSH_sample)
-log_all <- log(all_tRF+1)
+overlap_genes <- Reduce(intersect, vector_list)
 
-design<-model.matrix(~V2, data = all_sample)
-limma<-removeBatchEffect(log_all,batch = all_sample$batch, design = design)
-boxplot(limma,ylab="Data", main="Data after batch effect correction", outline=FALSE, notch=FALSE)
+all_tRF <- cbind(
+  TCGA_tRF_tpms[overlap_genes,],
+  GSE110907_tRF_tpms[overlap_genes,],
+  GSE175462_tRF_tpms[overlap_genes,],
+  GSE62182_tRF_tpms[overlap_genes,],
+  GSE83527_tRF_tpms[overlap_genes,],
+  RUSH_tRF_tpms[overlap_genes,]
+)
 
-limma_tRF_all <- exp(limma)
-any(limma_tRNA_all < 0)
-write.csv(limma_tRF_all, file = "limma_tRF_all.csv")
+log_tRF <- log(all_tRF + 1)
+design <- model.matrix(~V2, data = all_sample)
+limma_corrected_tRF <- removeBatchEffect(log_tRF, batch = all_sample$batch, design = design)
+boxplot(limma_corrected_tRF, ylab = "Expression", main = "Batch-Corrected tRF Data", outline = FALSE)
+limma_tRF_all <- exp(limma_corrected_tRF)
+stopifnot(all(limma_tRF_all >= 0))
+write.csv(limma_tRF_all, "limma_tRF_all.csv")
 
-#draw heatmap
-all_filter<-read.csv(file = "all_target_combine.csv", header = T, row.names = 1)
-data<-t(all_filter)
-cor_mat_all<-cor(data)
-pheatmap(cor_mat_all, frontsize_row = 18, main = "Gene Expression Correlation of tissue samples")
-colors <- colorRampPalette(brewer.pal(20, "RdBu"))(255)
+# ===============================
+# Correlation Heatmap for Combined Targets
+# ===============================
+all_filter <- read.csv("all_target_combine.csv", header = TRUE, row.names = 1)
+data <- t(all_filter)
+cor_matrix_all <- cor(data, method = "spearman")
 
-svg("all.svg",width = 10,height = 8)
-library(corrplot)
-spearman_all<-cor(data,method = "spearman")
-res_all<-cor.mtest(data, conf.level=.95)
-colors <- colorRampPalette(brewer.pal(10, "RdYlBu"))(255)
-all<- corrplot(spearman_all,
-               method = "shade",
-               type = "upper",
-               addCoef.col = "white",
-               number.cex = 0.7,
-               col = colors,
-               tl.cex = 0.8,
-               tl.col = "black",
-               tl.srt = 45)
-dev.off()
+# Heatmap
+plot_correlation_heatmap(cor_matrix_all, "all.svg", "Gene Expression Correlation of All Tissue Samples")
+
+# Corrplot with p-values (optional)
+# Uncomment below if needed:
+# res_all <- cor.mtest(data, conf.level = 0.95)  # define your own cor.mtest() if needed
+# plot_corrplot(cor_matrix_all, "all_corrplot.svg")
